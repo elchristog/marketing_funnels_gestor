@@ -1,6 +1,7 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import datetime
 import numpy as np
