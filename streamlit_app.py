@@ -187,7 +187,15 @@ def main():
                 df_hypotheses.drop('date', axis=1, inplace=True)
         
                 # Merge with hypotheses data
-                df = df.merge(df_hypotheses, on=['year', 'month', 'week_of_month'], how='left')
+                # First, group by year, month, and week_of_month and concatenate the hypotheses
+                df_hypotheses_grouped = df_hypotheses.groupby(['year', 'month', 'week_of_month']).agg({
+                    'name': lambda x: ', '.join(x),
+                    'description': lambda x: ', '.join(x)
+                }).reset_index()
+                
+                # Then merge with the main DataFrame
+                df = df.merge(df_hypotheses_grouped, on=['year', 'month', 'week_of_month'], how='left')
+
                 
                 # Order by year, month, week of the month, and order number
                 df = df.sort_values(by=['year', 'month', 'week_of_month', 'order_number'])
