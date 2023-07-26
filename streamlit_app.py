@@ -3,6 +3,41 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
 import streamlit as st
+import os
+import shutil
+
+def main():
+    st.title("Marketing Funnels")
+
+    st.sidebar.title("Menu")
+    menu = ["Home", "Upload DB", "Download DB", "Create new DB", "Add funnel step", "Add registration", "Add hypothesis", "View funnel", "View funnel by week"]
+    choice = st.sidebar.selectbox("Choose an option", menu)
+
+    if choice == "Home":
+        st.write("Welcome to the Marketing Funnels app.")
+
+    elif choice == "Upload DB":
+        uploaded_file = st.file_uploader("Choose a database file", type="db")
+        if uploaded_file is not None:
+            with open("marketing_funnels.db", "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            st.success("Database uploaded successfully.")
+
+    elif choice == "Download DB":
+        if st.button("Download DB"):
+            st.download_button(
+                "Download DB",
+                data=open("marketing_funnels.db", "rb"),
+                file_name="marketing_funnels.db",
+                mime="application/octet-stream",
+            )
+
+    elif choice == "Create new DB":
+        db_name = st.text_input("Enter new DB name")
+        if st.button("Create DB"):
+            conn = sqlite3.connect(f'{db_name}.db')
+            conn.close()
+            st.success(f"Database {db_name}.db created successfully.")
 
 # Database functions
 def create_tables():
