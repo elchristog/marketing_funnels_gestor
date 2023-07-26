@@ -40,7 +40,6 @@ def create_tables(conn):
 
     conn.commit()
 
-@st.cache(allow_output_mutation=True)
 def get_data(conn, query):
     return pd.read_sql_query(query, conn)
 
