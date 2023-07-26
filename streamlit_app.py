@@ -55,11 +55,25 @@ def main():
         st.write("Welcome to the Marketing Funnels app.")
 
     elif choice == "Upload DB":
-        uploaded_file = st.file_uploader("Choose a database file", type="db")
-        if uploaded_file is not None:
-            with open("marketing_funnels.db", "wb") as f:
-                f.write(uploaded_file.getbuffer())
-            st.success("Database uploaded successfully.")
+    uploaded_file = st.file_uploader("Choose a database file", type="db")
+    if uploaded_file is not None:
+        # Delete existing DB
+        if os.path.exists("marketing_funnels.db"):
+            os.remove("marketing_funnels.db")
+        with open("marketing_funnels.db", "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        st.success("Database uploaded successfully.")
+
+    elif choice == "Create new DB":
+        db_name = st.text_input("Enter new DB name")
+        if st.button("Create DB"):
+            # Delete existing DB
+            if os.path.exists("marketing_funnels.db"):
+                os.remove("marketing_funnels.db")
+            conn = sqlite3.connect('marketing_funnels.db')
+            conn.close()
+            st.success(f"Database {db_name}.db created successfully.")
+
 
     elif choice == "Download DB":
         if st.button("Download DB"):
@@ -69,12 +83,6 @@ def main():
                 file_name="marketing_funnels.db",
                 mime="application/octet-stream",
             )
-
-    elif choice == "Create new DB":
-        if st.button("Create DB"):
-            conn = sqlite3.connect('marketing_funnels.db')
-            conn.close()
-            st.success("Database created successfully.")
 
     else:
         conn = sqlite3.connect('marketing_funnels.db')
