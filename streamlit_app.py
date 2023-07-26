@@ -139,7 +139,10 @@ def main():
                 GROUP BY funnel_steps.id
                 ORDER BY funnel_steps.order_number
                 """)
+                # Compute conversion rates
+                df['conversion_rate'] = df['realizations'].pct_change() + 1
                 st.dataframe(df)
+
 
         elif choice == "View funnel by week":
             st.subheader("View funnel by week")
