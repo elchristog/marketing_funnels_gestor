@@ -6,9 +6,11 @@ Try: https://marketingfunnelsgestor-y5o3fozhgo.streamlit.app/
 ## Project Structure
 The project comprises a single Python script, which contains both the Streamlit application and SQLite database interactions. The code is organized into several parts:
 
-## Database functions: This section defines the functions create_tables and get_data used for database interactions. The create_tables function initializes the database with the necessary tables: funnel_steps, registrations, and hypotheses. The get_data function executes SQL queries and returns the results as pandas DataFrames.
+## Database functions: 
+This section defines the functions create_tables and get_data used for database interactions. The create_tables function initializes the database with the necessary tables: funnel_steps, registrations, and hypotheses. The get_data function executes SQL queries and returns the results as pandas DataFrames.
 
-## Streamlit application: This section defines the user interface and interactions of the application. The main function main creates the Streamlit interface, which includes menus for different actions (e.g., creating a new database, adding funnel steps, viewing funnel data, etc.), file uploaders, and data presentation widgets.
+## Streamlit application: 
+This section defines the user interface and interactions of the application. The main function main creates the Streamlit interface, which includes menus for different actions (e.g., creating a new database, adding funnel steps, viewing funnel data, etc.), file uploaders, and data presentation widgets.
 
 ## How to Use
 The application provides a sidebar menu with several options:
