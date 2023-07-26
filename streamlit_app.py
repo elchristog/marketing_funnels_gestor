@@ -1,24 +1,13 @@
-import streamlit as st
 import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
-import numpy as np
+import streamlit as st
 
-# Create a connection to the database
-conn = sqlite3.connect('marketing_funnels.db', check_same_thread=False)
+# Database functions
+def create_tables(conn):
+    cur = conn.cursor()
 
-@st.cache(allow_output_mutation=True)
-def get_conn():
-    return sqlite3.connect('marketing_funnels.db')
-
-@st.cache(hash_funcs={sqlite3.Cursor: id})
-def get_cursor(conn):
-    return conn.cursor()
-
-def create_tables():
-    cur = get_cursor(conn)
-    # Create the table for the funnel steps
     cur.execute("""
     CREATE TABLE IF NOT EXISTS funnel_steps (
         id INTEGER PRIMARY KEY,
@@ -27,7 +16,6 @@ def create_tables():
     );
     """)
 
-    # Modify the table for the registrations to include a description, realizations, and a date
     cur.execute("""
     CREATE TABLE IF NOT EXISTS registrations (
         id INTEGER PRIMARY KEY,
@@ -39,7 +27,6 @@ def create_tables():
     );
     """)
 
-    # Create the table for the hypotheses
     cur.execute("""
     CREATE TABLE IF NOT EXISTS hypotheses (
         id INTEGER PRIMARY KEY,
@@ -49,98 +36,97 @@ def create_tables():
     );
     """)
 
-def add_funnel_step(name, order_number):
-    cur = get_cursor(conn)
-    cur.execute("INSERT INTO funnel_steps (name, order_number) VALUES (?, ?)", (name, order_number))
     conn.commit()
 
-def delete_funnel_step(id):
-    cur = get_cursor(conn)
-    cur.execute("DELETE FROM funnel_steps WHERE id = ?", (id,))
-    conn.commit()
+@st.cache(allow_output_mutation=True)
+def get_data(conn, query):
+    return pd.read_sql_query(query, conn)
 
-# Modify the add_registration function to include a description, realizations, and a date
-def add_registration(funnel_step_id, description, realizations):
-    date = datetime.datetime.now().strftime("%Y-%m-%d")
-    cur = get_cursor(conn)
-    cur.execute("""
-    INSERT INTO registrations (funnel_step_id, description, realizations, date)
-    VALUES (?, ?, ?, ?)
-    """, (funnel_step_id, description, realizations, date))
-    conn.commit()
-
-def add_hypothesis(name, description):
-    date = datetime.datetime.now().strftime("%Y-%m-%d")
-    cur = get_cursor(conn)
-    cur.execute("""
-    INSERT INTO hypotheses (name, description, date)
-    VALUES (?, ?, ?)
-    """, (name, description, date))
-    conn.commit()
-
-def visualize_funnel(start_date=None, end_date=None):
-    cur = get_cursor(conn)
-    # Create the base of the SQL query
-    sql_query = """
-    SELECT
-        funnel_steps.id,
-        funnel_steps.name,
-        SUM(registrations.realizations) AS realizations
-    FROM funnel_steps
-    LEFT JOIN registrations ON funnel_steps.id = registrations.funnel_step_id
-    """
-    # Add a WHERE clause to filter by date if start_date and end_date are provided
-    if start_date and end_date:
-        sql_query += f" WHERE date(registrations.date) BETWEEN '{start_date}' AND '{end_date}'"
-
-    sql_query += """
-    GROUP BY funnel_steps.id
-    ORDER BY funnel_steps.order_number
-    """
-
-    df = pd.read_sql_query(sql_query, conn)
-
-    df['conversion_rate'] = df['realizations'].pct_change() + 1
-
-    plt.figure(figsize=(10, 6))
-
-    bars = plt.bar(df['id'].astype(str) + ' ' + df['name'], df['realizations'], color='blue')
-
-    for bar, rate in zip(bars, df['conversion_rate']):
-        if np.isfinite(bar.get_height()) and np.isfinite(rate):
-            yval = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width()/2, yval + 0.05, round(rate, 2), ha='center', va='bottom')
-
-    plt.xlabel('Funnel Step (ID, Name)')
-    plt.ylabel('Realizations')
-    st.pyplot(plt)
-
+# Streamlit app
 def main():
+    conn = sqlite3.connect('marketing_funnels.db')
+    create_tables(conn)
+
     st.title("Marketing Funnels")
 
-    menu = ["Home", "Add funnel step", "Delete funnel step", "Add registration", 
-            "View funnel", "Add hypothesis", "View funnel by week", 
-            "Preview table"]
+    st.sidebar.title("Menu")
+    menu = ["Home", "Add funnel step", "Add registration", "Add hypothesis", "View funnel", "View funnel by week"]
     choice = st.sidebar.selectbox("Choose an option", menu)
 
-    if choice == "Add funnel step":
-        st.subheader("Add Funnel Step")
+    if choice == "Home":
+        st.write("Welcome to the Marketing Funnels app.")
+
+    elif choice == "Add funnel step":
+        st.subheader("Add a new funnel step")
         name = st.text_input("Enter the name of the funnel step")
         order_number = st.number_input("Enter the order number of the funnel step", value=1, step=1)
         if st.button("Add Funnel Step"):
-            add_funnel_step(name, order_number)
-            st.success("Added funnel step successfully!")
+            cur = conn.cursor()
+            cur.execute("INSERT INTO funnel_steps (name, order_number) VALUES (?, ?)", (name, order_number))
+            conn.commit()
+            st.success("Funnel step added successfully.")
+
+    elif choice == "Add registration":
+        st.subheader("Add a new registration")
+        # Fetch funnel steps
+        df_funnel_steps = get_data(conn, "SELECT * FROM funnel_steps")
+        funnel_step_id = st.selectbox("Select funnel step", df_funnel_steps['id'])
+        description = st.text_input("Enter a description for the registration")
+        realizations = st.number_input("Enter the number of realizations", value=1, step=1)
+        if st.button("Add Registration"):
+            date = datetime.datetime.now().strftime("%Y-%m-%d")
+            cur = conn.cursor()
+            cur.execute("INSERT INTO registrations (funnel_step_id, description, realizations, date) VALUES (?, ?, ?, ?)", (funnel_step_id, description, realizations, date))
+            conn.commit()
+            st.success("Registration added successfully.")
+
+    elif choice == "Add hypothesis":
+        st.subheader("Add a new hypothesis")
+        name = st.text_input("Enter the name of the hypothesis")
+        description = st.text_input("Enter a description for the hypothesis")
+        if st.button("Add Hypothesis"):
+            date = datetime.datetime.now().strftime("%Y-%m-%d")
+            cur = conn.cursor()
+            cur.execute("INSERT INTO hypotheses (name, description, date) VALUES (?, ?, ?)", (name, description, date))
+            conn.commit()
+            st.success("Hypothesis added successfully.")
 
     elif choice == "View funnel":
-        st.subheader("View Funnel")
-        start_date = st.date_input("Start date")
-        end_date = st.date_input("End date")
-        if st.button("Show Funnel"):
-            visualize_funnel(start_date, end_date)
+        st.subheader("View funnel")
+        start_date = st.date_input("Enter the start date")
+        end_date = st.date_input("Enter the end date")
+        if st.button("View Funnel"):
+            df = get_data(conn, f"""
+            SELECT
+                funnel_steps.id,
+                funnel_steps.name,
+                SUM(registrations.realizations) AS realizations
+            FROM funnel_steps
+            LEFT JOIN registrations ON funnel_steps.id = registrations.funnel_step_id
+            WHERE date(registrations.date) BETWEEN '{start_date}' AND '{end_date}'
+            GROUP BY funnel_steps.id
+            ORDER BY funnel_steps.order_number
+            """)
+            st.dataframe(df)
 
-    # Similar blocks for other choices...
+    elif choice == "View funnel by week":
+        st.subheader("View funnel by week")
+        start_date = st.date_input("Enter the start date")
+        end_date = st.date_input("Enter the end date")
+        if st.button("View Funnel by Week"):
+            df = get_data(conn, f"""
+            SELECT
+                date,
+                funnel_steps.name,
+                funnel_steps.order_number,
+                SUM(registrations.realizations) AS realizations
+            FROM funnel_steps
+            LEFT JOIN registrations ON funnel_steps.id = registrations.funnel_step_id
+            WHERE date(registrations.date) BETWEEN '{start_date}' AND '{end_date}'
+            GROUP BY date, funnel_steps.name
+            ORDER BY date, funnel_steps.order_number
+            """)
+            st.dataframe(df)
 
 if __name__ == "__main__":
-    conn = get_conn()
-    create_tables()
     main()
