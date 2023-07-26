@@ -168,7 +168,7 @@ def main():
                 df['week_of_month'] = df['date'].apply(lambda x: (x.day - 1) // 7 + 1)
                 
                 # Compute conversion rates
-                df['conversion_rate'] = df.groupby(['year', 'month', 'week_of_month'])['realizations'].pct_change() + 1
+                df['conversion_rate'] = df.groupby(['year', 'month', 'week_of_month', 'order_number'])['realizations'].pct_change() + 1
                 
                 # Get hypotheses for each week
                 df_hypotheses = get_data(conn, f"""
@@ -187,8 +187,12 @@ def main():
         
                 # Merge with hypotheses data
                 df = df.merge(df_hypotheses, on=['year', 'month', 'week_of_month'], how='left')
+                
+                # Order by year, month, week of the month, and order number
+                df = df.sort_values(by=['year', 'month', 'week_of_month', 'order_number'])
         
                 st.dataframe(df)
+
 
 
 if __name__ == "__main__":
