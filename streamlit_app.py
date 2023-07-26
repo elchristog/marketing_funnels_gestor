@@ -168,8 +168,8 @@ def main():
                 df['week_of_month'] = df['date'].apply(lambda x: (x.day - 1) // 7 + 1)
                 
                 # Compute conversion rates
-                # df['conversion_rate'] = df.groupby(['year', 'month', 'week_of_month', 'order_number'])['realizations'].pct_change() + 1
-                df['conversion_rate'] = df.groupby(['year', 'month', 'week_of_month', 'name'])['realizations'].apply(lambda x: x.pct_change() + 1)
+                df = df.sort_values(by=['year', 'month', 'week_of_month', 'order_number'])
+                df['conversion_rate'] = df['realizations'] / df.groupby(['year', 'month', 'week_of_month'])['realizations'].shift(1)
                 
                 # Get hypotheses for each week
                 df_hypotheses = get_data(conn, f"""
