@@ -71,11 +71,10 @@ def main():
             )
 
     elif choice == "Create new DB":
-        db_name = st.text_input("Enter new DB name")
         if st.button("Create DB"):
-            conn = sqlite3.connect(f'{db_name}.db')
+            conn = sqlite3.connect('marketing_funnels.db')
             conn.close()
-            st.success(f"Database {db_name}.db created successfully.")
+            st.success("Database created successfully.")
 
     else:
         conn = sqlite3.connect('marketing_funnels.db')
