@@ -24,7 +24,8 @@ The application provides a sidebar menu with several options:
 - Add hypothesis: Allows users to add a new hypothesis to the database.
 - View funnel: Allows users to view the funnel data for a specific date range. The data includes conversion rates for each step in the funnel.
 - View funnel by week: Allows users to view weekly funnel data, including conversion rates and any hypotheses created during the week. The data is presented in a - table, with one row per week.
-- 
+
+  
 ## Implementation Details
 The application uses SQLite for data storage, pandas for data manipulation, and Streamlit for the user interface.
 
