@@ -55,14 +55,14 @@ def main():
         st.write("Welcome to the Marketing Funnels app.")
 
     elif choice == "Upload DB":
-    uploaded_file = st.file_uploader("Choose a database file", type="db")
-    if uploaded_file is not None:
-        # Delete existing DB
-        if os.path.exists("marketing_funnels.db"):
-            os.remove("marketing_funnels.db")
-        with open("marketing_funnels.db", "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        st.success("Database uploaded successfully.")
+        uploaded_file = st.file_uploader("Choose a database file", type="db")
+        if uploaded_file is not None:
+            # Delete existing DB
+            if os.path.exists("marketing_funnels.db"):
+                os.remove("marketing_funnels.db")
+            with open("marketing_funnels.db", "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            st.success("Database uploaded successfully.")
 
     elif choice == "Create new DB":
         db_name = st.text_input("Enter new DB name")
