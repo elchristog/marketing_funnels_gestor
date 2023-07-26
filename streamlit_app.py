@@ -161,7 +161,35 @@ def main():
                 GROUP BY date, funnel_steps.name
                 ORDER BY date, funnel_steps.order_number
                 """)
+                # Add year, month, week columns
+                df['date'] = pd.to_datetime(df['date'])
+                df['year'] = df['date'].dt.year
+                df['month'] = df['date'].dt.month
+                df['week_of_month'] = df['date'].apply(lambda x: (x.day - 1) // 7 + 1)
+                
+                # Compute conversion rates
+                df['conversion_rate'] = df.groupby(['year', 'month', 'week_of_month'])['realizations'].pct_change() + 1
+                
+                # Get hypotheses for each week
+                df_hypotheses = get_data(conn, f"""
+                SELECT
+                    date,
+                    name,
+                    description
+                FROM hypotheses
+                WHERE date(date) BETWEEN '{start_date}' AND '{end_date}'
+                """)
+                df_hypotheses['date'] = pd.to_datetime(df_hypotheses['date'])
+                df_hypotheses['year'] = df_hypotheses['date'].dt.year
+                df_hypotheses['month'] = df_hypotheses['date'].dt.month
+                df_hypotheses['week_of_month'] = df_hypotheses['date'].apply(lambda x: (x.day - 1) // 7 + 1)
+                df_hypotheses.drop('date', axis=1, inplace=True)
+        
+                # Merge with hypotheses data
+                df = df.merge(df_hypotheses, on=['year', 'month', 'week_of_month'], how='left')
+        
                 st.dataframe(df)
+
 
 if __name__ == "__main__":
     main()
