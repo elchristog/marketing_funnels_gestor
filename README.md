@@ -36,13 +36,13 @@ When viewing funnel data by week, any hypotheses created during the week are inc
 ## Requirements
 The application requires Python 3.6 or later and the following Python libraries:
 
-streamlit
-pandas
-sqlite3
-matplotlib
-datetime
-os
-shutil
+- streamlit
+- pandas
+- sqlite3
+- matplotlib
+- datetime
+- os
+- shutil
 
 ## Running the Application
 To run the application, navigate to the project directory in the terminal and run the command streamlit run app.py, where app.py is the name of the Python script. The application will open in a new browser window
